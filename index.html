@@ -1,0 +1,413 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Binary-parser by keichi</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="javascripts/scale.fix.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1 class="header">Binary-parser</h1>
+        <p class="header">Blazing-fast binary parser builder for node.js</p>
+
+        <ul>
+          <li class="download"><a class="buttons" href="https://github.com/keichi/binary-parser/zipball/master">Download ZIP</a></li>
+          <li class="download"><a class="buttons" href="https://github.com/keichi/binary-parser/tarball/master">Download TAR</a></li>
+          <li><a class="buttons github" href="https://github.com/keichi/binary-parser">View On GitHub</a></li>
+        </ul>
+
+        <p class="header">This project is maintained by <a class="header name" href="https://github.com/keichi">keichi</a></p>
+
+
+      </header>
+      <section>
+        <h1>
+<a name="binary-parser" class="anchor" href="#binary-parser"><span class="octicon octicon-link"></span></a>Binary-parser</h1>
+
+<p><a href="https://app.shippable.com/projects/540e7af73479c5ea8f9ebc33/builds/latest"><img src="https://api.shippable.com/projects/540e7af73479c5ea8f9ebc33/badge?branchName=master" alt="Build Status"></a></p>
+
+<p>Binary-parser is a binary parser builder library for <a href="http://nodejs.org">node</a>,
+which enables you to write efficient parsers in a simple &amp; declarative way.</p>
+
+<p>It supports all common data types required to analyze a structured binary data.
+Binary-parser dynamically generates and compiles the parser code on-the-fly,
+which runs as fast as a hand-written parser (which takes much more time and effort to write).
+Supported data types are:</p>
+
+<ul>
+<li>Integers (supports 8, 16, 32 bit signed- and unsigned integers)</li>
+<li>Floating point numbers (supports 32 and 64 bit floating point values)</li>
+<li>Bit fields (supports bit fields with length from 1 to 32 bits)</li>
+<li>Strings (supports various encodings, fixed-length and variable-length, zero terminated string)</li>
+<li>Arrays (supports user-defined element type, fixed-length and variable-length)</li>
+<li>Choices</li>
+<li>User defined types</li>
+</ul>
+
+<p>This library's features are inspired by <a href="https://github.com/dmendel/bindata">BinData</a>
+, its syntax by <a href="https://github.com/substack/node-binary">binary</a>.</p>
+
+<h2>
+<a name="installation" class="anchor" href="#installation"><span class="octicon octicon-link"></span></a>Installation</h2>
+
+<p>Binary-parser can be installed with <a href="https://npmjs.org/">npm</a>:</p>
+
+<div class="highlight highlight-shell"><pre><span class="nv">$ </span>npm install binary-parser
+</pre></div>
+
+<h2>
+<a name="quick-start" class="anchor" href="#quick-start"><span class="octicon octicon-link"></span></a>Quick Start</h2>
+
+<ol>
+<li>Create an empty Parser object with <code>new Parser()</code>.</li>
+<li>Chain builder methods to build the desired parser. (See <a href="https://github.com/Keichi/binary-parser#api">API</a> for detailed document
+of each methods)</li>
+<li>Call <code>Parser.prototype.parse</code> with an <code>Buffer</code> object passed as argument.</li>
+<li>Parsed result will be returned as an object.</li>
+</ol>
+
+<div class="highlight highlight-javascript"><pre><span class="c1">// Module import</span>
+<span class="kd">var</span> <span class="nx">Parser</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'binary-parser'</span><span class="p">).</span><span class="nx">Parser</span><span class="p">;</span>
+
+<span class="c1">// Build an IP packet header Parser</span>
+<span class="kd">var</span> <span class="nx">ipHeader</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Parser</span><span class="p">()</span>
+    <span class="p">.</span><span class="nx">endianess</span><span class="p">(</span><span class="s1">'big'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">bit4</span><span class="p">(</span><span class="s1">'version'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">bit4</span><span class="p">(</span><span class="s1">'headerLength'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">uint8</span><span class="p">(</span><span class="s1">'tos'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">uint16</span><span class="p">(</span><span class="s1">'packetLength'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">uint16</span><span class="p">(</span><span class="s1">'id'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">bit3</span><span class="p">(</span><span class="s1">'offset'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">bit13</span><span class="p">(</span><span class="s1">'fragOffset'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">uint8</span><span class="p">(</span><span class="s1">'ttl'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">uint8</span><span class="p">(</span><span class="s1">'protocol'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">uint16</span><span class="p">(</span><span class="s1">'checksum'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">array</span><span class="p">(</span><span class="s1">'src'</span><span class="p">,</span> <span class="p">{</span>
+        <span class="nx">type</span><span class="o">:</span> <span class="s1">'uint8'</span><span class="p">,</span>
+        <span class="nx">length</span><span class="o">:</span> <span class="mi">4</span>
+    <span class="p">})</span>
+    <span class="p">.</span><span class="nx">array</span><span class="p">(</span><span class="s1">'dst'</span><span class="p">,</span> <span class="p">{</span>
+        <span class="nx">type</span><span class="o">:</span> <span class="s1">'uint8'</span><span class="p">,</span>
+        <span class="nx">length</span><span class="o">:</span> <span class="mi">4</span>
+    <span class="p">});</span>
+
+<span class="c1">// Prepare buffer to parse.</span>
+<span class="kd">var</span> <span class="nx">buf</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Buffer</span><span class="p">(</span><span class="s1">'450002c5939900002c06ef98adc24f6c850186d1'</span><span class="p">,</span> <span class="s1">'hex'</span><span class="p">);</span>
+
+<span class="c1">// Parse buffer and show result</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">ipHeader</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">buf</span><span class="p">));</span> 
+</pre></div>
+
+<h2>
+<a name="api" class="anchor" href="#api"><span class="octicon octicon-link"></span></a>API</h2>
+
+<h3>
+<a name="new-parser" class="anchor" href="#new-parser"><span class="octicon octicon-link"></span></a>new Parser()</h3>
+
+<p>Constructs a Parser object. Returned object represents a parser which parses nothing.</p>
+
+<h3>
+<a name="parsebuffer-callback" class="anchor" href="#parsebuffer-callback"><span class="octicon octicon-link"></span></a>parse(buffer[, callback])</h3>
+
+<p>Parse a <code>Buffer</code> object <code>buffer</code> with this parser and return the resulting object.
+When <code>parse(buffer)</code> is called for the first time, parser code is compiled on-the-fly
+and internally cached.</p>
+
+<p>If parser's <code>async</code> option is <code>true</code>, then a callback function has to be passed as an
+argument. This callback should take two arguments like other node.js callbacks:
+<code>function(err, result)</code>.</p>
+
+<h3>
+<a name="createconstructorfunction" class="anchor" href="#createconstructorfunction"><span class="octicon octicon-link"></span></a>create(constructorFunction)</h3>
+
+<p>Set the constructor function that should be called to create the object returned from
+the <code>parse</code> method.</p>
+
+<h3>
+<a name="uint8-16-32le-bename-options" class="anchor" href="#uint8-16-32le-bename-options"><span class="octicon octicon-link"></span></a>[u]int{8, 16, 32}{le, be}(name [,options])</h3>
+
+<p>Parse bytes as an integer and store it in a variable named <code>name</code>. <code>name</code> should consist
+only of alphanumeric characters and start with an alphabet.
+Number of bits can be chosen from 8, 16 and 32.
+Byte-ordering can be either <code>l</code> for little endian or <code>b</code> for big endian.
+With no prefix, it parses as a signed number, with <code>u</code> prefixed as an unsigned number. </p>
+
+<div class="highlight highlight-javascript"><pre><span class="kd">var</span> <span class="nx">parser</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Parser</span><span class="p">()</span>
+    <span class="c1">// Signed 32-bit integer (little endian)</span>
+    <span class="p">.</span><span class="nx">int32le</span><span class="p">(</span><span class="s1">'a'</span><span class="p">)</span>
+    <span class="c1">// Unsigned 8-bit integer</span>
+    <span class="p">.</span><span class="nx">uint8</span><span class="p">(</span><span class="s1">'b'</span><span class="p">)</span>
+    <span class="c1">// Signed 16-bit integer (big endian)</span>
+    <span class="p">.</span><span class="nx">int16be</span><span class="p">(</span><span class="s1">'c'</span><span class="p">)</span>
+</pre></div>
+
+<h3>
+<a name="bit1-32name-options" class="anchor" href="#bit1-32name-options"><span class="octicon octicon-link"></span></a>bit[1-32](name [,options])</h3>
+
+<p>Parse bytes as a bit field and store it in variable <code>name</code>. There are 32 methods from
+<code>bit1</code> to <code>bit32</code> each corresponding to 1-bit-length to 32-bits-length bit field.</p>
+
+<h3>
+<a name="float-doublele-bename-options" class="anchor" href="#float-doublele-bename-options"><span class="octicon octicon-link"></span></a>{float, double}{le, be}(name [,options])</h3>
+
+<p>Parse bytes as an floating-point value and store it in a variable
+named <code>name</code>. <code>name</code> should consist only of alphanumeric characters and start 
+with an alphabet.</p>
+
+<div class="highlight highlight-javascript"><pre><span class="kd">var</span> <span class="nx">parser</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Parser</span><span class="p">()</span>
+    <span class="c1">// 32-bit floating value (big endian)</span>
+    <span class="p">.</span><span class="nx">floatbe</span><span class="p">(</span><span class="s1">'a'</span><span class="p">)</span>
+    <span class="c1">// 64-bit floating value (little endian)</span>
+    <span class="p">.</span><span class="nx">doublele</span><span class="p">(</span><span class="s1">'b'</span><span class="p">)</span>
+</pre></div>
+
+<h3>
+<a name="stringname-options" class="anchor" href="#stringname-options"><span class="octicon octicon-link"></span></a>string(name [,options])</h3>
+
+<p>Parse bytes as a string. <code>name</code> should consist only of alpha numeric characters and start
+with an alphabet. <code>options</code> is an object; following options are available: </p>
+
+<ul>
+<li>
+<code>encoding</code> - (Optional, defaults to <code>utf8</code>) Specify which encoding to use. <code>'utf8'</code>, <code>'ascii'</code>, <code>'hex'</code> and else
+are valid. See <a href="http://nodejs.org/api/buffer.html#buffer_buf_tostring_encoding_start_end"><code>Buffer.toString</code></a> for more info.</li>
+<li>
+<code>length</code> - (Required) Length of the string. Can be a number, string or a function.
+Use number for statically sized arrays, string to reference another variable and
+function to do some calculation.</li>
+<li>
+<code>zeroTerminated</code> - (Optional, defaults to <code>false</code>) If true, then this parser reads until it reaches zero.</li>
+</ul>
+
+<h3>
+<a name="buffername-options" class="anchor" href="#buffername-options"><span class="octicon octicon-link"></span></a>buffer(name [,options])</h3>
+
+<p>Parse bytes as a buffer. <code>name</code> should consist only of alpha numeric characters and start
+with an alphabet. <code>options</code> is an object; following options are available: </p>
+
+<ul>
+<li>
+<code>clone</code> - (Optional, defaults to <code>false</code>) By default, <code>buffer(name [,options])</code> returns a new buffer which references
+the same memory as the parser input, but offset and cropped by a certain range. If this option is true, input buffer
+will be cloned and a new buffer referncing another memory is returned.</li>
+<li>
+<code>length</code> - (either <code>length</code> or <code>readUntil</code> is required) Length of the buffer. Can be a number, string or a function.
+Use number for statically sized buffers, string to reference another variable and
+function to do some calculation.</li>
+<li>
+<code>readUntil</code> - (either <code>length</code> or <code>readUntil</code> is required) If <code>'eof'</code>, then this parser
+will read till it reaches end of the <code>Buffer</code> object.</li>
+</ul>
+
+<h3>
+<a name="arrayname-options" class="anchor" href="#arrayname-options"><span class="octicon octicon-link"></span></a>array(name [,options])</h3>
+
+<p>Parse bytes as an array. <code>options</code> is an object; following options are available: </p>
+
+<ul>
+<li>
+<code>type</code> - (Required) Type of the array element. Can be a string or an user defined Parser object.
+If it's a string, you have to choose from [u]int{8, 16, 32}{le, be}.</li>
+<li>
+<code>length</code> - (either <code>length</code> or <code>readUntil</code> is required) Length of the array. Can be a number, string or a function.
+Use number for statically sized arrays.</li>
+<li>
+<code>readUntil</code> - (either <code>length</code> or <code>readUntil</code> is required) If <code>'eof'</code>, then this parser
+will read till it reaches end of the <code>Buffer</code> object.</li>
+</ul>
+
+<div class="highlight highlight-javascript"><pre><span class="kd">var</span> <span class="nx">parser</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Parser</span><span class="p">()</span>
+    <span class="c1">// Statically sized array</span>
+    <span class="p">.</span><span class="nx">array</span><span class="p">(</span><span class="s1">'data'</span><span class="p">,</span> <span class="p">{</span>
+        <span class="nx">type</span><span class="o">:</span> <span class="s1">'int32'</span><span class="p">,</span>
+        <span class="nx">length</span><span class="o">:</span> <span class="mi">8</span>
+    <span class="p">})</span>
+
+    <span class="c1">// Dynamically sized array (reference another variable)</span>
+    <span class="p">.</span><span class="nx">uint8</span><span class="p">(</span><span class="s1">'dataLength'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">array</span><span class="p">(</span><span class="s1">'data2'</span><span class="p">,</span> <span class="p">{</span>
+        <span class="nx">type</span><span class="o">:</span> <span class="s1">'int32'</span><span class="p">,</span>
+        <span class="nx">length</span><span class="o">:</span> <span class="s1">'dataLength'</span>
+    <span class="p">})</span>
+
+    <span class="c1">// Dynamically sized array (with some calculation)</span>
+    <span class="p">.</span><span class="nx">array</span><span class="p">(</span><span class="s1">'data3'</span><span class="p">,</span> <span class="p">{</span>
+        <span class="nx">type</span><span class="o">:</span> <span class="s1">'int32'</span><span class="p">,</span>
+        <span class="nx">length</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span> <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">dataLength</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span> <span class="p">}</span> <span class="c1">// other fields are available through this</span>
+    <span class="p">});</span>
+
+    <span class="c1">// Use user defined parser object</span>
+    <span class="p">.</span><span class="nx">array</span><span class="p">(</span><span class="s1">'data4'</span><span class="p">,</span> <span class="p">{</span>
+        <span class="nx">type</span><span class="o">:</span> <span class="nx">userDefinedParser</span><span class="p">,</span>
+        <span class="nx">length</span><span class="o">:</span> <span class="s1">'dataLength'</span>
+    <span class="p">})</span>
+</pre></div>
+
+<h3>
+<a name="choicename-options" class="anchor" href="#choicename-options"><span class="octicon octicon-link"></span></a>choice(name [,options])</h3>
+
+<p>Choose one parser from several choices according to a field value.
+Combining <code>choice</code> with <code>array</code> is useful for parsing a typical
+<a href="http://en.wikipedia.org/wiki/Type-length-value">Type-Length-Value</a> styled format.</p>
+
+<ul>
+<li>
+<code>tag</code> - (Required) The value used to determine which parser to use from the <code>choices</code>
+Can be a string pointing to another field or a function. </li>
+<li>
+<code>choices</code> - (Required) An object which key is an integer and value is the parser which is executed
+when <code>tag</code> equals the key value.</li>
+<li>
+<code>defaultChoice</code> - (Optional) In case of the tag value doesn't match any of <code>choices</code> use this parser.</li>
+</ul>
+
+<div class="highlight highlight-javascript"><pre><span class="kd">var</span> <span class="nx">parser1</span> <span class="o">=</span> <span class="p">...;</span>
+<span class="kd">var</span> <span class="nx">parser2</span> <span class="o">=</span> <span class="p">...;</span>
+<span class="kd">var</span> <span class="nx">parser3</span> <span class="o">=</span> <span class="p">...;</span>
+
+<span class="kd">var</span> <span class="nx">parser</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Parser</span><span class="p">()</span>
+    <span class="p">.</span><span class="nx">uint8</span><span class="p">(</span><span class="s1">'tagValue'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">choice</span><span class="p">(</span><span class="s1">'data'</span><span class="p">,</span> <span class="p">{</span>
+        <span class="nx">tag</span><span class="o">:</span> <span class="s1">'tagValue'</span><span class="p">,</span>
+        <span class="nx">choices</span><span class="o">:</span> <span class="p">[</span>
+            <span class="mi">1</span><span class="o">:</span> <span class="nx">parser1</span><span class="p">,</span> <span class="c1">// When tagValue == 1, execute parser1</span>
+            <span class="mi">4</span><span class="o">:</span> <span class="nx">parser2</span><span class="p">,</span> <span class="c1">// When tagValue == 4, execute parser2</span>
+            <span class="mi">5</span><span class="o">:</span> <span class="nx">parser3</span>  <span class="c1">// When tagValue == 5, execute parser3</span>
+        <span class="p">]</span>
+    <span class="p">});</span>
+</pre></div>
+
+<h3>
+<a name="nestname-options" class="anchor" href="#nestname-options"><span class="octicon octicon-link"></span></a>nest(name [,options])</h3>
+
+<p>Nest a parser in this position. Parse result of the nested parser is stored in the variable
+<code>name</code>.</p>
+
+<ul>
+<li>
+<code>type</code> - (Required) A <code>Parser</code> object.</li>
+</ul>
+
+<h3>
+<a name="skiplength" class="anchor" href="#skiplength"><span class="octicon octicon-link"></span></a>skip(length)</h3>
+
+<p>Skip parsing for <code>length</code> bytes.</p>
+
+<h3>
+<a name="endianessendianess" class="anchor" href="#endianessendianess"><span class="octicon octicon-link"></span></a>endianess(endianess)</h3>
+
+<p>Define what endianess to use in this parser. <code>endianess</code> can be either <code>'little'</code> or <code>'big'</code>.
+The default endianess of <code>Parser</code> is set to big-endian.</p>
+
+<div class="highlight highlight-javascript"><pre><span class="kd">var</span> <span class="nx">parser</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Parser</span><span class="p">()</span>
+    <span class="p">.</span><span class="nx">endianess</span><span class="p">(</span><span class="s1">'le'</span><span class="p">)</span>
+    <span class="c1">// You can specify endianess explicitly</span>
+    <span class="p">.</span><span class="nx">uint16be</span><span class="p">(</span><span class="s1">'a'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">uint32le</span><span class="p">(</span><span class="s1">'a'</span><span class="p">)</span>
+    <span class="c1">// Or you can omit endianess (in this case, little-endian is used)</span>
+    <span class="p">.</span><span class="nx">uint16</span><span class="p">(</span><span class="s1">'b'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">int32</span><span class="p">(</span><span class="s1">'c'</span><span class="p">)</span>
+</pre></div>
+
+<h3>
+<a name="compile" class="anchor" href="#compile"><span class="octicon octicon-link"></span></a>compile()</h3>
+
+<p>Compile this parser on-the-fly and cache its result. Usually, there is no need to
+call this method directly, since it's called when <code>parse(buffer)</code> is executed
+for the first time.</p>
+
+<h3>
+<a name="getcode" class="anchor" href="#getcode"><span class="octicon octicon-link"></span></a>getCode()</h3>
+
+<p>Dynamically generates the code for this parser and returns it as a string.
+Usually used for debugging.</p>
+
+<h3>
+<a name="common-options" class="anchor" href="#common-options"><span class="octicon octicon-link"></span></a>Common options</h3>
+
+<p>These are common options that can be specified in all parsers.</p>
+
+<ul>
+<li>
+<p><code>assert</code> - Do assertion on the parsed result (useful for checking magic numbers and so on).
+If <code>assert</code> is a <code>string</code> or <code>number</code>, the actual parsed result will be compared with it
+with <code>===</code> (strict equality check), and an exception is thrown if they mismatch.
+On the other hand, if <code>assert</code> is a function, that function is executed with one argument
+(parsed result) and if it returns false, an exception is thrown.</p>
+
+<div class="highlight highlight-javascript"><pre><span class="c1">// simple maginc number validation</span>
+<span class="kd">var</span> <span class="nx">ClassFile</span> <span class="o">=</span>
+    <span class="nx">Parser</span><span class="p">.</span><span class="nx">start</span><span class="p">()</span>
+    <span class="p">.</span><span class="nx">endianess</span><span class="p">(</span><span class="s1">'big'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">uint32</span><span class="p">(</span><span class="s1">'magic'</span><span class="p">,</span> <span class="p">{</span><span class="nx">assert</span><span class="o">:</span> <span class="mh">0xcafebabe</span><span class="p">})</span>
+
+<span class="c1">// Doing more complex assertion with a predicate function</span>
+<span class="kd">var</span> <span class="nx">parser</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Parser</span><span class="p">()</span>
+    <span class="p">.</span><span class="nx">int16le</span><span class="p">(</span><span class="s1">'a'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">int16le</span><span class="p">(</span><span class="s1">'b'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">int16le</span><span class="p">(</span><span class="s1">'c'</span><span class="p">,</span> <span class="p">{</span>
+        <span class="nx">assert</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">x</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">a</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">b</span> <span class="o">===</span> <span class="nx">x</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">});</span>
+</pre></div>
+</li>
+<li><p><code>async</code> - If <code>true</code>, then this parser will be executed asynchronously. You also have
+to pass a callback function to <code>Parser.parse(buffer, callback)</code>.</p></li>
+</ul>
+
+<h2>
+<a name="examples" class="anchor" href="#examples"><span class="octicon octicon-link"></span></a>Examples</h2>
+
+<p>See <code>example</code> for more complex examples.</p>
+
+<h2>
+<a name="support" class="anchor" href="#support"><span class="octicon octicon-link"></span></a>Support</h2>
+
+<p>Please report issues to the <a href="https://github.com/Keichi/binary-parser/issues">issue tracker</a> if you
+have any difficulties using this module, found a bug, or request a new feature.</p>
+
+<p>Pull requests with fixes and improvements are welcomed!</p>
+
+<h2>
+<a name="license" class="anchor" href="#license"><span class="octicon octicon-link"></span></a>License</h2>
+
+<p>The MIT License (MIT)</p>
+
+<p>Copyright (c) 2013 Keichi Takahashi <a href="mailto:keichi.t@me.com">keichi.t@me.com</a></p>
+
+<p>Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:</p>
+
+<p>The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.</p>
+
+<p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.</p>
+      </section>
+      <footer>
+        <p><small>Hosted on <a href="http://pages.github.com">GitHub Pages</a> using the Dinky theme</small></p>
+      </footer>
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+		
+  </body>
+</html>
